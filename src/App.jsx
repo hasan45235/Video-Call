@@ -19,10 +19,12 @@ import { SocketProvider } from "./context/SocketContext";
 import { Home } from "./pages/Home";
 
 export default function App() {
-  return (
-    <SocketProvider>  
+  return (<>
+
+
+    <SocketProvider>
       <Home />
     </SocketProvider>
-  );
+  </>);
 }
 
