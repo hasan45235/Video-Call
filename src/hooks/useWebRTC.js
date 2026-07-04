@@ -140,9 +140,9 @@ export function useWebRTC() {
   /**
    * Initialize RTCPeerConnection and bind common event handlers
    */
-  const initPeerConnection = useCallback((stream, peerId) => {
+  const initPeerConnection = useCallback(async (stream, peerId) => {
     console.log("Initializing RTCPeerConnection...");
-    const pc = createPeerConnection();
+    const pc = await createPeerConnection();
     activePeerIdRef.current = peerId;
 
     // 1. Attach local tracks to peer connection
@@ -196,7 +196,7 @@ export function useWebRTC() {
 
     try {
       const stream = await acquireLocalMedia();
-      const pc = initPeerConnection(stream, targetUserId);
+      const pc = await initPeerConnection(stream, targetUserId);
       setCallStatus("calling");
 
       // Create and set local description
@@ -224,7 +224,7 @@ export function useWebRTC() {
 
     try {
       const stream = await acquireLocalMedia();
-      const pc = initPeerConnection(stream, incomingCall.from);
+      const pc = await initPeerConnection(stream, incomingCall.from);
 
       // Set remote SDP description (the offer)
       await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));

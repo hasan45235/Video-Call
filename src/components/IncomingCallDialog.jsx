@@ -14,7 +14,6 @@
  * description and starts local media streaming; when rejected, it sends a reject
  * event to notify the caller.
  */
-import React from "react";
 import {
   Dialog,
   DialogContent,

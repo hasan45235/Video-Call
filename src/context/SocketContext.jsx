@@ -17,15 +17,17 @@
  * who is available to call before any WebRTC peer negotiation starts.
  */
 
-import React, { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { socket } from "../services/socket";
 import { SOCKET_EVENTS } from "../utils/constants";
 
+// This context intentionally shares the provider's public module.
+// eslint-disable-next-line react-refresh/only-export-components
 export const SocketContext = createContext(null);
 
 
 export const SocketProvider = ({ children }) => {
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(() => socket.connected);
   const [registeredUser, setRegisteredUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [registerError, setRegisterError] = useState(null);
@@ -65,11 +67,6 @@ export const SocketProvider = ({ children }) => {
     socket.on("register-success", onRegisterSuccess);
     socket.on("register-error", onRegisterError);
     socket.on(SOCKET_EVENTS.USER_LIST_UPDATE, onUserListUpdate);
-
-    // Initial state check in case socket was already connected
-    if (socket.connected) {
-      setIsConnected(true);
-    }
 
     return () => {
       // Clean up event listeners on unmount

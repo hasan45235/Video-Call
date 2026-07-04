@@ -15,12 +15,14 @@
  * IncomingCallDialog pop-up to capture incoming SDP Offers.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Container,
   Box,
   Typography,
   Button,
+  IconButton,
+  Tooltip,
   AppBar,
   Toolbar,
   Alert,
@@ -88,9 +90,6 @@ export const Home = () => {
     logoutUser();
     setInputUsername("");
   };
-
-  const isCallConnected = callStatus === "connected";
-
 
   // Render Login/Username prompt if not joined yet
   if (!registeredUser) {
@@ -271,28 +270,34 @@ export const Home = () => {
           borderBottom: "1px solid #e2e8f0",
         }}
       >
-        <Container maxWidth="xl">
+        <Container maxWidth="xl" sx={{ px: { xs: 1.5, sm: 3 } }}>
           <Toolbar
             disableGutters
             sx={{
               display: "flex",
               justifyContent: "space-between",
-              py: 1,
+              gap: { xs: 1, sm: 2 },
+              minHeight: { xs: 56, sm: 64 },
+              py: { xs: 0.75, sm: 1 },
             }}
           >
             {/* Left */}
+
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 2,
+                gap: { xs: 1, sm: 2 },
+                minWidth: 0,
+                flexShrink: 1,
               }}
             >
               <Avatar
                 sx={{
                   bgcolor: "primary.main",
-                  width: 38,
-                  height: 38,
+                  width: { xs: 34, sm: 38 },
+                  height: { xs: 34, sm: 38 },
+                  flexShrink: 0,
                 }}
               >
                 <Video size={20} />
@@ -301,6 +306,7 @@ export const Home = () => {
               <Typography
                 variant="h6"
                 fontWeight={700}
+                sx={{ display: { xs: "none", sm: "block" } }}
               >
                 WebRTC.io
               </Typography>
@@ -337,7 +343,9 @@ export const Home = () => {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 2,
+                gap: { xs: 0.75, sm: 2 },
+                minWidth: 0,
+                flexShrink: 0,
               }}
             >
               <Box
@@ -348,8 +356,9 @@ export const Home = () => {
                   bgcolor: "#f8fafc",
                   border: "1px solid #e2e8f0",
                   borderRadius: 3,
-                  px: 2,
-                  py: 1,
+                  px: { xs: 0.5, sm: 2 },
+                  py: { xs: 0.5, sm: 1 },
+                  minWidth: 0,
                 }}
               >
                 <Avatar
@@ -368,6 +377,7 @@ export const Home = () => {
                   noWrap
                   sx={{
                     maxWidth: 130,
+                    display: { xs: "none", sm: "block" },
                   }}
                 >
                   {registeredUser.username} (Me)
@@ -381,13 +391,34 @@ export const Home = () => {
                 startIcon={<LogOut size={16} />}
                 onClick={handleExit}
                 sx={{
+                  display: { xs: "none", sm: "inline-flex" },
                   borderRadius: 2,
                   textTransform: "none",
                 }}
               >
                 Exit
               </Button>
+
+              <Tooltip title="Exit">
+                <IconButton
+                  id="btn-logout-mobile"
+                  aria-label="Exit"
+                  onClick={handleExit}
+                  sx={{
+                    display: { xs: "inline-flex", sm: "none" },
+                    width: 36,
+                    height: 36,
+                    color: "primary.main",
+                    border: "1px solid",
+                    borderColor: "primary.main",
+                    borderRadius: 2,
+                  }}
+                >
+                  <LogOut size={17} />
+                </IconButton>
+              </Tooltip>
             </Box>
+
           </Toolbar>
         </Container>
       </AppBar>
@@ -406,17 +437,6 @@ export const Home = () => {
           spacing={4}
         >
           {/* Sidebar */}
-          <Grid size={{ xs: 12, lg: 4, xl: 3 }}>
-            <UserList
-              users={onlineUsers}
-              currentUserId={registeredUser.id}
-              onCallUser={handleCallInitiation}
-              callStatus={callStatus}
-            />
-          </Grid>
-
-          {/* Main */}
-
           <Grid size={{ xs: 12, lg: 8, xl: 9 }}>
             <Box
               sx={{
@@ -447,6 +467,17 @@ export const Home = () => {
               />
             </Box>
           </Grid>
+
+          {/* Main */}
+          <Grid size={{ xs: 12, lg: 4, xl: 3 }}>
+            <UserList
+              users={onlineUsers}
+              currentUserId={registeredUser.id}
+              onCallUser={handleCallInitiation}
+              callStatus={callStatus}
+            />
+          </Grid>
+
         </Grid>
       </Container>
 

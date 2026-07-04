@@ -14,7 +14,6 @@
  * querying the target user's socket.id and initiating the initial SDP Offer exchange.
  */
 
-import React from "react";
 import { Box, Typography, List, ListItem, ListItemText, ListItemAvatar, Avatar, Button, Paper } from "@mui/material";
 import { User, Video, CircleDot } from "lucide-react";
 

@@ -14,7 +14,6 @@
  * component within the tree has instant access to signaling sockets and online directory states.
  */
 
-import React from "react";
 import { SocketProvider } from "./context/SocketContext";
 import { Home } from "./pages/Home";
 
@@ -27,4 +26,3 @@ export default function App() {
     </SocketProvider>
   </>);
 }
-

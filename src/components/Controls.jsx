@@ -14,7 +14,6 @@
  * and signaling-level operations (like initiating hangup commands, accepting offers,
  * or sending reject events back to the server).
  */
-import React from "react";
 import { Box, IconButton, Tooltip, Button } from "@mui/material";
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from "lucide-react";
 
