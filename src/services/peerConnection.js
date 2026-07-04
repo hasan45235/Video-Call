@@ -1,66 +1,40 @@
 /**
- * Why this file exists:
- * This file encapsulates the configuration and creation of standard RTCPeerConnection objects.
- *
- * When it is executed:
- * Executed every time a new WebRTC peer-to-peer call is initiated or answered.
- *
- * Which other files use it:
- * Used by src/hooks/useWebRTC.ts to create new peer connection instances.
- *
- * How it fits into the WebRTC signaling flow:
- * Sets up the RTC connection with Google's public STUN servers. These STUN servers discover
- * public IP addresses and ports for each user, allowing WebRTC media (video and audio)
- * to stream directly between browsers without going through the server.
+ * Creates the WebRTC peer connection using public STUN servers and TURN
+ * credentials supplied through Vite environment variables.
  */
 
-// Google's public STUN servers for NAT traversal and candidate discovery
-const RTC_CONFIG = {
-  iceServers: [
-    {
-      urls: "stun:stun.relay.metered.ca:80"
-    },
-    {
-      urls: "stun:stun.l.google.com:19302"
-    },
-    {
-      urls: "stun:stun1.l.google.com:19302"
-    },
-    {
-      urls: "stun:stun2.l.google.com:19302"
-    },
-    {
-      urls: "stun:stun3.l.google.com:19302"
-    },
-    {
-      urls: "stun:stun4.l.google.com:19302"
-    },
-    {
-      urls: "turn:global.relay.metered.ca:80",
-      username: "a3dd80826130bc902c2073d1",
-      credential: "MKCPKvyQfeLkRP6U",
-    },
-    {
-      urls: "turn:global.relay.metered.ca:80?transport=tcp",
-      username: "a3dd80826130bc902c2073d1",
-      credential: "MKCPKvyQfeLkRP6U",
-    },
-    {
-      urls: "turn:global.relay.metered.ca:443",
-      username: "a3dd80826130bc902c2073d1",
-      credential: "MKCPKvyQfeLkRP6U",
-    },
-    {
-      urls: "turns:global.relay.metered.ca:443?transport=tcp",
-      username: "a3dd80826130bc902c2073d1",
-      credential: "MKCPKvyQfeLkRP6U",
-    }
-  ],
-};
+const turnUrls = (import.meta.env.VITE_TURN_URLS || "")
+  .split(",")
+  .map((url) => url.trim())
+  .filter(Boolean);
 
-/**
- * Factory function to create a new, pre-configured RTCPeerConnection
- */
+const iceServers = [
+  {
+    urls: [
+      "stun:stun.relay.metered.ca:80",
+      "stun:stun.l.google.com:19302",
+      "stun:stun1.l.google.com:19302",
+      "stun:stun2.l.google.com:19302",
+      "stun:stun3.l.google.com:19302",
+      "stun:stun4.l.google.com:19302",
+    ],
+  },
+];
+
+if (
+  turnUrls.length > 0 &&
+  import.meta.env.VITE_TURN_USERNAME &&
+  import.meta.env.VITE_TURN_CREDENTIAL
+) {
+  iceServers.push({
+    urls: turnUrls,
+    username: import.meta.env.VITE_TURN_USERNAME,
+    credential: import.meta.env.VITE_TURN_CREDENTIAL,
+  });
+}
+
+const RTC_CONFIG = { iceServers };
+
 export function createPeerConnection() {
   return new RTCPeerConnection(RTC_CONFIG);
 }
