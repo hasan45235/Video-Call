@@ -19,7 +19,7 @@
 
 import React, { createContext, useEffect, useState } from "react";
 import { socket } from "../services/socket";
-import { SOCKET_EVENTS } from "../../../../Backend/utils/constants";
+import { SOCKET_EVENTS } from "../utils/constants";
 
 export const SocketContext = createContext(null);
 
@@ -95,6 +95,17 @@ export const SocketProvider = ({ children }) => {
     setRegisterError(null);
   };
 
+  const logoutUser = () => {
+    setRegisteredUser(null);
+    setOnlineUsers([]);
+    setRegisterError(null);
+
+    // Disconnect so the signaling server immediately removes this user,
+    // then reconnect anonymously so another username can be entered.
+    socket.disconnect();
+    socket.connect();
+  };
+
   return (
     <SocketContext.Provider
       value={{
@@ -105,6 +116,7 @@ export const SocketProvider = ({ children }) => {
         registerError,
         registerUsername,
         resetRegisterError,
+        logoutUser,
       }}
     >
       {children}

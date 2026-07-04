@@ -9,7 +9,7 @@
  * Which other files use it:
  * Imported and rendered in src/App.tsx.
  *
- * How it fits into the WebRTC signaling flow:
+ * How it fits into the WebRTC signaling flow:  
  * It binds the Socket context and WebRTC custom hook together. It feeds stream states
  * into the VideoPlayer, triggers dialing methods on UserList select, and mounts the
  * IncomingCallDialog pop-up to capture incoming SDP Offers.
@@ -30,7 +30,7 @@ import {
   TextField,
   Grid,
 } from "@mui/material";
-import { Video, UserPlus, Info, CheckCircle2, Wifi, LogOut } from "lucide-react";
+import { Video, UserPlus, Wifi, LogOut } from "lucide-react";
 import { useSocket } from "../hooks/useSocket";
 import { useWebRTC } from "../hooks/useWebRTC";
 import { UserList } from "../components/UserList";
@@ -39,13 +39,14 @@ import { Controls } from "../components/Controls";
 import { IncomingCallDialog } from "../components/IncomingCallDialog";
 
 export const Home = () => {
+
   const {
     isConnected,
     registeredUser,
     onlineUsers,
     registerError,
     registerUsername,
-    resetRegisterError,
+    logoutUser,
   } = useSocket();
 
   const {
@@ -80,7 +81,16 @@ export const Home = () => {
     callUser(targetId, targetUsername);
   };
 
+  const handleExit = () => {
+    if (callStatus !== "idle") {
+      endCall();
+    }
+    logoutUser();
+    setInputUsername("");
+  };
+
   const isCallConnected = callStatus === "connected";
+
 
   // Render Login/Username prompt if not joined yet
   if (!registeredUser) {
@@ -369,6 +379,7 @@ export const Home = () => {
                 variant="outlined"
                 size="small"
                 startIcon={<LogOut size={16} />}
+                onClick={handleExit}
                 sx={{
                   borderRadius: 2,
                   textTransform: "none",
@@ -420,7 +431,6 @@ export const Home = () => {
                 remoteStream={remoteStream}
                 callStatus={callStatus}
                 activePeer={activePeer}
-                registeredUser={registeredUser}
                 isVideoMuted={isVideoMuted}
                 isAudioMuted={isAudioMuted}
               />

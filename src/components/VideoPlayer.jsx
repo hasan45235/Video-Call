@@ -14,9 +14,9 @@
  * track events (remote), binding them to HTML5 <video> elements for real-time visualization.
  */
 
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Box, Typography, Card, Avatar } from "@mui/material";
-import { Video, VideoOff, MicOff, User } from "lucide-react";
+import { VideoOff, MicOff, User } from "lucide-react";
 
 
 export const VideoPlayer = ({
@@ -24,7 +24,6 @@ export const VideoPlayer = ({
   remoteStream,
   callStatus,
   activePeer,
-  registeredUser,
   isVideoMuted,
   isAudioMuted,
 }) => {
@@ -42,8 +41,11 @@ export const VideoPlayer = ({
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch(() => {
+        // Autoplay may briefly be blocked while the element is mounting.
+      });
     }
-  }, [remoteStream]);
+  }, [remoteStream, callStatus]);
 
   const isCallConnected = callStatus === "connected";
 return (
@@ -196,9 +198,26 @@ return (
           boxShadow: 6,
         }}
       >
-        {isVideoMuted ? (
+        <video
+          id="local-video"
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            transform: "scaleX(-1)",
+            backgroundColor: "#1e293b",
+          }}
+        />
+
+        {isVideoMuted && (
           <Box
             sx={{
+              position: "absolute",
+              inset: 0,
               width: "100%",
               height: "100%",
               bgcolor: "#1e293b",
@@ -208,6 +227,7 @@ return (
               justifyContent: "center",
               alignItems: "center",
               gap: 1,
+              zIndex: 1,
             }}
           >
             <VideoOff size={24} />
@@ -224,21 +244,6 @@ return (
               Camera Off
             </Typography>
           </Box>
-        ) : (
-          <video
-            id="local-video"
-            ref={localVideoRef}
-            autoPlay
-            playsInline
-            muted
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transform: "scaleX(-1)",
-              backgroundColor: "#1e293b",
-            }}
-          />
         )}
 
         <Box
@@ -256,6 +261,7 @@ return (
             bgcolor: "rgba(0,0,0,.4)",
             backdropFilter: "blur(8px)",
             color: "#fff",
+            zIndex: 2,
           }}
         >
           <Typography

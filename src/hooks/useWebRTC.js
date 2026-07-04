@@ -38,6 +38,8 @@ export function useWebRTC() {
   const peerConnectionRef = useRef(null);
   const activePeerIdRef = useRef(null);
   const localStreamRef = useRef(null);
+  const remoteStreamRef = useRef(null);
+  const pendingIceCandidatesRef = useRef([]);
 
   // Synchronize state to ref
   useEffect(() => {
@@ -47,6 +49,10 @@ export function useWebRTC() {
   useEffect(() => {
     localStreamRef.current = localStream;
   }, [localStream]);
+
+  useEffect(() => {
+    remoteStreamRef.current = remoteStream;
+  }, [remoteStream]);
 
   /**
    * Safe clean-up of Peer Connection and Streams
@@ -64,23 +70,37 @@ export function useWebRTC() {
     }
 
     // Stop remote stream tracks
-    if (remoteStream) {
-      remoteStream.getTracks().forEach((track) => track.stop());
+    if (remoteStreamRef.current) {
+      remoteStreamRef.current.getTracks().forEach((track) => track.stop());
+      remoteStreamRef.current = null;
       setRemoteStream(null);
     }
 
     // Stop local stream tracks (Standard privacy behavior: release camera/mic when idle)
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current = null;
       setLocalStream(null);
     }
+
+    activePeerIdRef.current = null;
+    pendingIceCandidatesRef.current = [];
 
     setCallStatus("idle");
     setActivePeer(null);
     setIncomingCall(null);
     setIsAudioMuted(false);
     setIsVideoMuted(false);
-  }, [remoteStream]);
+  }, []);
+
+  const flushPendingIceCandidates = async (pc) => {
+    const candidates = pendingIceCandidatesRef.current;
+    pendingIceCandidatesRef.current = [];
+
+    for (const candidate of candidates) {
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+  };
 
   /**
    * Acquire camera and microphone stream
@@ -101,6 +121,7 @@ export function useWebRTC() {
         },
         audio: true,
       });
+      localStreamRef.current = stream;
       setLocalStream(stream);
       return stream;
     } catch (error) {
@@ -144,6 +165,7 @@ export function useWebRTC() {
     pc.ontrack = (event) => {
       console.log("Received remote stream/track:", event.streams[0]);
       if (event.streams && event.streams[0]) {
+        remoteStreamRef.current = event.streams[0];
         setRemoteStream(event.streams[0]);
       }
     };
@@ -152,7 +174,6 @@ export function useWebRTC() {
     pc.oniceconnectionstatechange = () => {
       console.log("ICE Connection State:", pc.iceConnectionState);
       if (
-        pc.iceConnectionState === "disconnected" ||
         pc.iceConnectionState === "failed" ||
         pc.iceConnectionState === "closed"
       ) {
@@ -175,7 +196,7 @@ export function useWebRTC() {
 
     try {
       const stream = await acquireLocalMedia();
-      const pc = initPeerConnection(stream);
+      const pc = initPeerConnection(stream, targetUserId);
       setCallStatus("calling");
 
       // Create and set local description
@@ -207,6 +228,7 @@ export function useWebRTC() {
 
       // Set remote SDP description (the offer)
       await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
+      await flushPendingIceCandidates(pc);
 
       // Create answer and set local description
       const answer = await pc.createAnswer();
@@ -304,6 +326,7 @@ export function useWebRTC() {
       if (peerConnectionRef.current) {
         try {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+          await flushPendingIceCandidates(peerConnectionRef.current);
           setCallStatus("connected");
         } catch (error) {
           console.error("Failed to set remote answer description:", error);
@@ -322,12 +345,15 @@ export function useWebRTC() {
     // Listen for remote ICE Candidate
     const onIceCandidate = async (data) => {
       console.log("Received remote ICE candidate from peer.");
-      if (peerConnectionRef.current) {
+      const pc = peerConnectionRef.current;
+      if (pc && pc.remoteDescription) {
         try {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
         } catch (error) {
           console.error("Failed to add remote ICE candidate:", error);
         }
+      } else {
+        pendingIceCandidatesRef.current.push(data.candidate);
       }
     };
 
